@@ -5,27 +5,32 @@ import os
 import json
 import subprocess
 
+from na_gribtools.metadata import *
+from na_gribtools.raster import *
+
+##############################################################################
+
 TARGET = sys.argv[1]
+LAT, LNG = (53, 16)
 
-def getMetadata(filename):
-    cacheFilename = filename + ".metadata"
-    if os.path.isfile(cacheFilename):
-        try:
-            return json.loads(open(cacheFilename, "r").read())
-        except:
-            print("generate metadata cache...")
+VARIABLES = [
     
-    try:
-        rawMetadata = subprocess.check_output(\
-            ["gdalinfo", "-json", TARGET]
-        ).decode("ascii")
-        try:
-            open(cacheFilename, "w+").write(rawMetadata)
-        except:
-            print("Unable to generate cache.")
-        return json.loads(rawMetadata)
-    except:
-        return None
+]
 
 
-print(getMetadata(TARGET))
+##############################################################################
+
+metadata = getMetadata(TARGET)
+rasterReader = RasterDataReader(TARGET)
+
+ret = {}
+
+for band in metadata["bands"]:
+    bandID = band["band"]
+    bandMetadata = band["metadata"][""]
+
+    variableName = bandMetadata["GRIB_ELEMENT"]
+    if variableName not in VARIABLES: continue
+    ret[variableName] = rasterReader.readBand(bandID, LAT, LNG)[0]
+
+print(ret)
