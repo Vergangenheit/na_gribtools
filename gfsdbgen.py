@@ -18,4 +18,6 @@ TARGET = sys.argv[1]
 
 db = GFSDatabase(TARGET)
 
-db.generate()
+#db.generate()
+
+print(db.readByXY(360, 180))
