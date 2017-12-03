@@ -3,7 +3,7 @@
 import subprocess
 import os
 
-def convertDWDGrid(resourceFileDir, inputFile):
+def convertDWDGrid(resourceFileDir, inputFile, removeOnSuccess=True):
     if not os.path.isdir(resourceFileDir):
         raise Exception("Resource file directory doesn't exist.")
 
@@ -20,22 +20,32 @@ def convertDWDGrid(resourceFileDir, inputFile):
 
     if not os.path.isfile(inputFile):
         raise Exception("Input file doesn't exist.")
-    
-    if inputFile.endswith(".grib2"):
-        outputFile = inputFile[:-6] + ".grb2"
-    elif inputFile.endswith(".grib2.bz2"):
-        outputFile = inputFile[:-10] + ".grb2"
-        subprocess.check_output(["bunzip2", inputFile])
-        inputFile = inputFile[:-4]
-    else:
-        raise Exception("Input must be a .grib2 or .grib2.bz2 file.")
 
-    command = [\
-        "cdo", "-f", "grb2", "remap,%s,%s" % (targetFile, weightFile), \
-        inputFile, outputFile
-    ]
-    return subprocess.check_output(command)
+    try:
+        if inputFile.endswith(".grib2"):
+            outputFile = inputFile[:-6] + ".grb2"
+        elif inputFile.endswith(".grib2.bz2"):
+            outputFile = inputFile[:-10] + ".grb2"
+            subprocess.check_output(["bunzip2", inputFile])
+            inputFile = inputFile[:-4]
+        else:
+            raise Exception("Input must be a .grib2 or .grib2.bz2 file.")
 
+        command = [\
+            "cdo", "-f", "grb2", "remap,%s,%s" % (targetFile, weightFile), \
+            inputFile, outputFile
+        ]
+        subprocess.check_output(command)
+        assert os.path.isfile(outputFile)
+    except Exception as e:
+        raise e
+
+    try:
+        os.chmod(outputFile, 0o644)
+        if removeOnSuccess:
+            os.unlink(inputFile)
+    except:
+        pass
 
 
 if __name__ == "__main__":
