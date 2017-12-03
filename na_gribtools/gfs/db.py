@@ -21,7 +21,7 @@ class GFSDatabase:
             raise Exception("Requires a .grb2 file as input.")
         self.gfsFilename = gfsFilename
         self.dbFilename = self.gfsFilename + ".gfsdb"
-
+        
     def __buildReturnData(self, array):
         lat, lng = array[:2]
         array = array[2:]
@@ -38,6 +38,31 @@ class GFSDatabase:
             }
         return ret
 
+    def __enter__(self):
+        if not os.path.isfile(self.dbFilename):
+            self.__generate()
+
+        self.__f = open(self.dbFilename, "rb")
+        return self
+
+    def __exit__(self, *args, **argv):
+        self.__f.close()
+        del self.__f
+
+    def readByLatLng(self, lat, lng):
+        rasterReader = RasterDataReader(self.gfsFilename)
+
+        if not ( \
+            -90 < lat and lat < 90 and \
+            -180 < lng and lng < 180
+        ):
+            raise Exception("Invalid latitude or longitude.")
+        if lng < 0: lng += 360
+
+        x, y = rasterReader.getXYFromLatLng(lat, lng)
+        return self.readByXY(x, y)
+        
+
     def readByXY(self, x, y):
         rasterReader = RasterDataReader(self.gfsFilename)
 
@@ -47,25 +72,23 @@ class GFSDatabase:
         ):
             raise Exception("Invalid x or y range.")
             
-        if not os.path.isfile(self.dbFilename):
-            self.generate()
-
         offset = (y * rasterReader.xSize + x) * ENTRY_BYTES_SIZE
-        with open(self.dbFilename, "rb") as f:
-            try:
-                f.seek(offset, 0)
-                data = f.read(ENTRY_BYTES_SIZE)
-                data = struct.unpack(VARIABLES_PACKER, data)
-                return self.__buildReturnData(data)
-            except:
-                return None
+
+        try:
+            self.__f.seek(offset, 0)
+            data = self.__f.read(ENTRY_BYTES_SIZE)
+            data = struct.unpack(VARIABLES_PACKER, data)
+            return self.__buildReturnData(data)
+        except Exception as e:
+            print(e)
+            return None
 
 
-    def generate(self):
+    def __generate(self):
         rasterReader = RasterDataReader(self.gfsFilename)
-        with open(self.dbFilename, "wb+") as f:
-            bandData = {}
+        bandData = {}
 
+        with open(self.dbFilename, "wb+") as f:
             for y in range(0, rasterReader.ySize):
                 # for each line
                 print("Progress: %f %%" % (y / rasterReader.ySize * 100.0))

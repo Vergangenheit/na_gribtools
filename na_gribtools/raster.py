@@ -3,7 +3,6 @@
 import struct
 import gdal
 from gdalconst import *
-import math
 
 class RasterDataReader:
 
@@ -27,6 +26,13 @@ class RasterDataReader:
         y = math.floor((lat - TOPLEFTY) / RESY - 1) + 1
         print(self.transform, lat, lng, x, y)
         return (x, y, 1, 1) # left, top, x-size, y-size
+
+    def getXYFromLatLng(self, lat, lng):
+        TOPLEFTX, RESX, _, TOPLEFTY, __, RESY = self.transform
+        realX = (lng - TOPLEFTX) / RESX - 1
+        realY = (lat - TOPLEFTY) / RESY - 1
+        x, y = round(realX), round(realY)
+        return x, y 
 
     def getLatLngFromXY(self, x, y):
         TOPLEFTX, RESX, _, TOPLEFTY, __, RESY = self.transform

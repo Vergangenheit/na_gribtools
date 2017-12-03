@@ -16,8 +16,9 @@ TARGET = sys.argv[1]
 ##############################################################################
 
 
-db = GFSDatabase(TARGET)
+#with GFSDatabase(TARGET, "w+") as db:
+    #db.generate()
+#    pass
 
-#db.generate()
-
-print(db.readByXY(360, 180))
+with GFSDatabase(TARGET) as db:
+    print(db.readByLatLng(42.167, 123.637))
