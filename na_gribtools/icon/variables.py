@@ -27,5 +27,5 @@ __ICON_ALL_VARIABLES =[\
     "vmax_10m", "w", "w_snow", "w_so", "ww", "z0"
 ] # just a list of all possible variables
 
-assert set([i[0] for i in ICON_VARIABLES.items()]).issubset(\
+assert set([i[1][0] for i in ICON_VARIABLES.items()]).issubset(\
     set(__ICON_ALL_VARIABLES)) 

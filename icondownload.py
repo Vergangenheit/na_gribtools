@@ -3,4 +3,4 @@
 from na_gribtools.icon.db import *
 
 db = ICONDatabase()
-print(db.downloadNew("t_2m"))
+print(db.downloadForecast(6))

@@ -5,4 +5,5 @@ data-source
 config.yaml
 *.grib*
 *.grb*
+*.tiff
 resources/*.nc

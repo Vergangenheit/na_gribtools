@@ -3,11 +3,11 @@
 import subprocess
 import os
 
-def convertDWDGrid(resourceFileDir, inputFile, removeOnSuccess=True):
-    if not os.path.isdir(resourceFileDir):
+def convertDWDGrid(resourceDir, inputFile, removeOnSuccess=True):
+    if not os.path.isdir(resourceDir):
         raise Exception("Resource file directory doesn't exist.")
 
-    resFile = lambda i: os.path.realpath(os.path.join(resourceFileDir, i))
+    resFile = lambda i: os.path.realpath(os.path.join(resourceDir, i))
     targetFile = resFile("target_grid_world_0125.txt")
     weightFile = resFile("weights_icogl2world_0125.nc")
 
