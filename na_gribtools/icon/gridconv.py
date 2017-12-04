@@ -22,7 +22,9 @@ def convertDWDGrid(resourceDir, inputFile, removeOnSuccess=True):
         raise Exception("Input file doesn't exist.")
 
     try:
-        if inputFile.endswith(".grib2"):
+        if inputFile.endswith(".grb2"):
+            return inputFile
+        elif inputFile.endswith(".grib2"):
             outputFile = inputFile[:-6] + ".grb2"
         elif inputFile.endswith(".grib2.bz2"):
             outputFile = inputFile[:-10] + ".grb2"
@@ -46,6 +48,8 @@ def convertDWDGrid(resourceDir, inputFile, removeOnSuccess=True):
             os.unlink(inputFile)
     except:
         pass
+
+    return outputFile
 
 
 if __name__ == "__main__":
