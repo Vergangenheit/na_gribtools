@@ -10,6 +10,7 @@ ICON_VARIABLES = {
     # variables that we are interested in
     # id             name           level                        band
     "t_2m":         ("t_2m",        ICON_SINGLE_LEVEL,           1          ),
+    "tot_prec":     ("tot_prec",    ICON_SINGLE_LEVEL,           1          ),
 }
 
 ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())

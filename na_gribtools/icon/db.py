@@ -92,6 +92,6 @@ class ICONDatabase:
             downloadURLs[variableID] = \
                 self.__getURL(variableID, timeIdentifier, forecastDiff)
 
-        downloadAndCompile(\
+        return downloadAndCompile(\
             timeIdentifier, forecastDiff, downloadURLs,
             tempDir=self.tempDir, resourceDir=self.resourceDir)

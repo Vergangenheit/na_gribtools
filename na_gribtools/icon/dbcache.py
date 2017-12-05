@@ -1,9 +1,48 @@
 #!/usr/bin/env python3
 
+"""
+`na_gribtools` specific cached data file
+========================================
+
+2 functions are provided here:
+    * downloadAndCompile
+    *
+
+# downloadAndCompile
+
+is a function for downloading several dataset from DWD's server and compiling
+them into a data file used by this library.
+
+The data file begins with 2 byte little-endian length mark, indicating the
+header's length that follows up. The header itself is JSON and may be parsed.
+
+Immediately after header there's data packed. Each piece of data comprises a
+length of 8x(number_of_variables+2) bytes, where all interested variables are
+listed in `variables.py`, and the first 16 bytes reserved for the 2 double
+values of latitude & longitude.
+
+For example, if 2 variables: `t_2m` and `tot_prec` are listed, a piece of data
+will be 4x8=32 bytes: <latitude, longitude, t_2m, tot_prec>.
+
+The pieces are written in file per column(x) and per row(y) as the same
+sequence in grib file:
+
+    <x=0, y=0>, <x=1, y=0>, ......<x=2879, y=0>
+    <x=0, y=1>...
+    ...
+
+so that on reading this file it would be easy if (x,y) can be calculated with
+known geo-transformation(which will be recorded in header): just seek to
+(y*xSize + x) * bytes_per_entry and read.
+
+"""
+
+
 import os
 import sys
 import subprocess
 import struct
+import json
 
 from .variables import *
 from .gridconv import *
@@ -16,6 +55,10 @@ ICONDB_VARIABLES_PACKER = "<" + "d" * ICONDB_VARIABLES_PER_ENTRY
 ICONDB_ENTRY_BYTES_SIZE = \
     ICONDB_SINGLE_VARIABLE_BYTES_SIZE * ICONDB_VARIABLES_PER_ENTRY
 
+
+
+##############################################################################
+# Downloading and compiling function
 
 def __downloadByInstructions(instructions, tempDir):
     # returns a map from variableID to local file path
@@ -39,9 +82,6 @@ def __downloadByInstructions(instructions, tempDir):
     for each in ret:
         if not os.path.isfile(ret[each]): return None
     return ret
-
-
-
 
 def downloadAndCompile(\
     timeIdentifier, forecastDiff, instructions,
@@ -78,12 +118,30 @@ def downloadAndCompile(\
         print("Creating an empty output file...")
         
         raster = RasterDataReader(downloadedFiles[variableID])
+
+        print("Recording metadata...")
+
+        metadataBin = json.dumps({
+            "xSize": raster.xSize,
+            "ySize": raster.ySize,
+        }).encode("utf-8")
+
+        metadataBinLength = len(metadataBin)
+
+        f.seek(0, os.SEEK_SET)
+        f.write(struct.pack("<H", metadataBinLength)) # which takes 2 bytes
+        f.write(metadataBin)
+
+        headerLength = metadataBinLength + 2
+
+        print("Recording lat/lng info...")
+
         for y in range(0, raster.ySize):
             for x in range(0, raster.xSize):
                 lat, lng = raster.getLatLngFromXY(x, y)
                 f.write(struct.pack(
                     ICONDB_VARIABLES_PACKER,
-                    lat, lng, *[0 * (ICONDB_VARIABLES_PER_ENTRY-2)]
+                    lat, lng, *((0,) * (ICONDB_VARIABLES_PER_ENTRY-2))
                 ))
     
         # ---- read raster data and dump into file
@@ -98,7 +156,7 @@ def downloadAndCompile(\
             
             name, level, band = ICON_VARIABLES[variableID]
             raster = RasterDataReader(downloadedFiles[variableID])
-            f.seek(perEntryOffset, os.SEEK_SET) # to file begin, with offset
+            f.seek(perEntryOffset + headerLength, os.SEEK_SET)
             
             for y in range(0, raster.ySize):
                 xData = raster.dumpBandLine(band, y) # get a whole line, quick
@@ -115,5 +173,8 @@ def downloadAndCompile(\
 
             perEntryOffset += ICONDB_SINGLE_VARIABLE_BYTES_SIZE
 
+    return outputFile
 
-    print(downloadedFiles)
+
+##############################################################################
+# Extracting info from a cache db
