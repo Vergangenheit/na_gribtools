@@ -8,9 +8,16 @@ ICON_LEVEL_86_90 = "model_level_86_90"
 
 ICON_VARIABLES = {
     # variables that we are interested in
+    # see: https://www.dwd.de/DE/leistungen/opendata/help/inhalt_allgemein/opendata_content_de_en_pdf.pdf?__blob=publicationFile
+
     # id             name           level                        band
     "t_2m":         ("t_2m",        ICON_SINGLE_LEVEL,           1          ),
     "tot_prec":     ("tot_prec",    ICON_SINGLE_LEVEL,           1          ),
+    "ww":           ("ww",          ICON_SINGLE_LEVEL,           1          ),
+    "clcl":         ("clcl",        ICON_SINGLE_LEVEL,           1          ),
+    "clcm":         ("clcm",        ICON_SINGLE_LEVEL,           1          ),
+    "clch":         ("clch",        ICON_SINGLE_LEVEL,           1          ),
+    "clct":         ("clct",        ICON_SINGLE_LEVEL,           1          ),
 }
 
 ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())
