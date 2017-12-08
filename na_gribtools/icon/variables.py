@@ -18,6 +18,7 @@ ICON_VARIABLES = {
     "clcm":         ("clcm",        ICON_SINGLE_LEVEL,           1          ),
     "clch":         ("clch",        ICON_SINGLE_LEVEL,           1          ),
     "clct":         ("clct",        ICON_SINGLE_LEVEL,           1          ),
+    "vmax_10m":     ("vmax_10m",    ICON_SINGLE_LEVEL,           1          ),
 }
 
 ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())

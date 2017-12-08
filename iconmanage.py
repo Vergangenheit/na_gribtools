@@ -9,8 +9,9 @@ action = sys.argv[1].lower()
 db = ICONDatabase()
 
 if action == "download":
-    filename = db.downloadForecast(int(sys.argv[2]))
-    print(filename)
+    for each in sys.argv[2:]:
+        filename = db.downloadForecast(int(each))
+        print(filename)
 elif action == "query":
     allEntries = db.listDatabase()
     lat = float(sys.argv[2])

@@ -82,13 +82,14 @@ class ICONDatabase:
         # Decide which time is to be downloaded from server
 
         timeIdentifier, downloadTime = self.__getDownloadTimeInfo()
+
         nowTime = datetime.datetime.utcnow()
         roundedNowTime = datetime.datetime(
             nowTime.year, nowTime.month, nowTime.day, nowTime.hour)
         forecastTime = roundedNowTime +\
             datetime.timedelta(hours=forecastHoursFromNow)
-            
-        forecastDiff = int((forecastTime - downloadTime).seconds / 3600.0)
+
+        forecastDiff = int((forecastTime - downloadTime).total_seconds() / 3600.0)
         if forecastDiff > 78:
             forecastDiff = int(math.floor(forecastDiff / 3.0) * 3.0)
         if forecastDiff > 180:
