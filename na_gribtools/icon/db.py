@@ -5,6 +5,7 @@ import sys
 import subprocess
 import datetime
 import math
+import re
 
 from .variables import *
 from .dbcache import *
@@ -18,6 +19,18 @@ class ICONDatabase:
     def __init__(self, tempDir="/tmp/na_dwd/", resourceDir="./resources/"):
         self.resourceDir = resourceDir
         self.tempDir = tempDir
+
+    def __getDatasetFilename(\
+        self, variableID, timeIdentifier, hours, ending=".grib2.bz2"
+    ):
+        vName, vLevel, vBand = ICON_VARIABLES[variableID]
+        return "ICON_iko_%s_elements_world_%s_%s_%03d%s" % (\
+            vLevel,
+            vName.upper(),
+            timeIdentifier,
+            hours,
+            ending
+        )
 
     def __getURL(self, variableID, timeIdentifier, hours=6):
         """Generate a download URL for a given variable defined in
@@ -43,12 +56,8 @@ class ICONDatabase:
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
         URL = "https://opendata.dwd.de/weather/icon/global/grib/"
         URL += timeIdentifier[-2:] + "/" + vName.lower() + "/"
-        URL += "ICON_iko_%s_elements_world_%s_%s_%03d.grib2.bz2" % (\
-            vLevel,
-            vName.upper(),
-            timeIdentifier,
-            hours
-        )
+        URL += self.__getDatasetFilename(\
+            variableID, timeIdentifier, hours, ".grib2.bz2")
         return URL
 
     def __getDownloadTimeInfo(self):
@@ -95,3 +104,85 @@ class ICONDatabase:
         return downloadAndCompile(\
             timeIdentifier, forecastDiff, downloadURLs,
             tempDir=self.tempDir, resourceDir=self.resourceDir)
+
+    def listDatabase(self):
+        ret = {}
+
+        for name in os.listdir(self.tempDir):
+            fullpath = os.path.join(self.tempDir, name)
+
+            # filter
+            if not os.path.isfile(fullpath): continue
+            if not fullpath.endswith(".icondb"): continue
+            
+            # parse timestamp
+            match = re.search("([0-9]{10})_([0-9]{3})", name)
+            if not match: continue
+            try:
+                runTime = timeIdentifierToDatetime(match.group(1))
+                forecastHours = int(match.group(2))
+                forecastTime = runTime + \
+                    datetime.timedelta(hours=forecastHours)
+            except:
+                continue
+
+            # list
+            ret[(runTime, forecastHours)] = {
+                "path": fullpath,
+                "runtime": runTime,
+                "forecasttime": forecastTime,
+                "forecasthours": forecastHours,
+            }
+
+        return ret
+
+    def cleanUp(self, beforeHours = 12):
+        """Delete files whose run time is older as `beforeHours`."""
+        assert type(beforeHours) == int and beforeHours > 0
+        now = datetime.datetime.utcnow()
+        delList = []
+        for name in os.listdir(self.tempDir):
+            fullpath = os.path.join(self.tempDir, name)
+
+            # filter
+            if not os.path.isfile(fullpath): continue
+            want = False
+            for suffix in [".icondb", ".grb2", ".grib2", ".grib2.bz2"]:
+                if fullpath.endswith(suffix):
+                    want = True
+                    break
+            if not want: continue
+            
+            # parse timestamp
+            match = re.search("([0-9]{10})_[0-9]{3}", name)
+            if not match: continue
+            try:
+                runTime = timeIdentifierToDatetime(match.group(1))
+            except:
+                # if even the run time of a seemingly dataset could not be
+                # parsed, then delete it.
+                delList.append(fullpath)
+                continue
+
+            if (now - runTime).total_seconds() > beforeHours * 3600:
+                delList.append(fullpath)
+        for each in delList:
+            print("Delete: %s" % each)
+            os.unlink(each)
+
+
+    def getSingleForecast(self, timestamp, forecastDiff):
+        assert type(forecastDiff) == int
+        if isinstance(timestamp, datetime.datetime):
+            timestamp = "%04d%02d%02d%02d" % (
+                timestamp.year,
+                timestamp.month,
+                timestamp.day,
+                timestamp.hour
+            )
+        assert type(timestamp) == str
+
+        filepath = getICONDBPath(self.tempDir, timestamp, forecastDiff)
+        if not os.path.isfile(filepath):
+            return None
+        return ICONDBReader(filepath)

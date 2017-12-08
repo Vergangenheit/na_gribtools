@@ -43,10 +43,12 @@ import sys
 import subprocess
 import struct
 import json
+import re
 
 from .variables import *
 from .gridconv import *
 from ..raster import *
+from ..timeidentifier import *
 
 ICONDB_VARIABLES_PER_ENTRY = 2 + len(ICON_VARIABLE_INDEXES)
 ICONDB_SINGLE_VARIABLE_PACKER = "<d"
@@ -55,6 +57,14 @@ ICONDB_VARIABLES_PACKER = "<" + "d" * ICONDB_VARIABLES_PER_ENTRY
 ICONDB_ENTRY_BYTES_SIZE = \
     ICONDB_SINGLE_VARIABLE_BYTES_SIZE * ICONDB_VARIABLES_PER_ENTRY
 
+
+##############################################################################
+# General functions
+
+def getICONDBPath(tempDir, timeIdentifier, forecastHours):
+    return os.path.join(tempDir,
+        "%s_%03d.icondb" % (timeIdentifier, forecastHours)
+    )
 
 
 ##############################################################################
@@ -105,9 +115,7 @@ def downloadAndCompile(\
 
     # Compile files into a large db file
     
-    outputFile = os.path.join(tempDir,
-        "%s_%03d.icondb" % (timeIdentifier, forecastDiff)
-    )
+    outputFile = getICONDBPath(tempDir, timeIdentifier, forecastDiff)
 
     print("Output set to: %s" % outputFile)
 
@@ -122,8 +130,11 @@ def downloadAndCompile(\
         print("Recording metadata...")
 
         metadataBin = json.dumps({
+            "time": timeIdentifier,
+            "forecast": forecastDiff,
             "xSize": raster.xSize,
             "ySize": raster.ySize,
+            "transform": raster.transform,
         }).encode("utf-8")
 
         metadataBinLength = len(metadataBin)
@@ -178,3 +189,53 @@ def downloadAndCompile(\
 
 ##############################################################################
 # Extracting info from a cache db
+
+class ICONDBReader:
+
+    def __init__(self, filename):
+        if not os.path.isfile(filename) or not filename.endswith(".icondb"):
+            raise Exception("Not a ICON cached database.")
+
+        with open(filename, "rb") as f:
+            f.seek(0, os.SEEK_SET)
+            metadataBinLength = struct.unpack("<H", f.read(2))[0]
+            metadata = f.read(metadataBinLength)
+            self.dataOffset = metadataBinLength + 2
+            self.metadata = json.loads(metadata.decode("utf-8"))
+
+        self.__filename = filename
+        self.__xSize = self.metadata["xSize"]
+        self.__ySize = self.metadata["ySize"]
+        self.__timeIdentifier = self.metadata["time"]
+        self.__forecastHours = self.metadata["forecast"]
+        self.__transform = self.metadata["transform"]
+        self.__runTime = timeIdentifierToDatetime(self.__timeIdentifier)
+        self.__forecastTime =\
+            self.__runTime + datetime.timedelta(hours=self.__forecastHours)
+        
+    def __enter__(self, *args, **argv):
+        self.__f = open(self.__filename, "rb")
+        return self
+
+    def __exit__(self, *args, **argv):
+        self.__f.close()
+
+    def query(self, lat, lng):
+        x, y = geotransformLatLngToXY(self.__transform, lat, lng)
+        offset = self.dataOffset +\
+            (y * self.__xSize + x) * ICONDB_ENTRY_BYTES_SIZE
+        self.__f.seek(offset, os.SEEK_SET)
+        data = struct.unpack(
+            ICONDB_VARIABLES_PACKER,
+            self.__f.read(ICONDB_ENTRY_BYTES_SIZE))
+        ret = {
+            "lat": data[0],
+            "lng": data[1],
+            "runtime": self.__runTime,
+            "forecast": self.__forecastTime,
+        }
+        data = data[2:]
+        for i in range(0, len(data)):
+            variableID = ICON_VARIABLE_INDEXES[i]
+            ret[variableID] = data[i]
+        return ret

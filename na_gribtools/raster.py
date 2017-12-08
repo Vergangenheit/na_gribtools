@@ -4,13 +4,23 @@ import struct
 import gdal
 from gdalconst import *
 
+from .geotransform import *
+
+
+def correctGeotransform(i):
+    ret = list(i)
+    if ret[1] > 0 and ret[0] > 0:
+        ret[0] = -ret[0]
+    return ret
+
+
 class RasterDataReader:
 
     def __init__(self, filename):
         self.__g = gdal.Open(filename, GA_ReadOnly)
         if not self.__g:
             raise Exception("Cannot read this file.")
-        self.transform = self.__g.GetGeoTransform()
+        self.transform = correctGeotransform(self.__g.GetGeoTransform())
         self.bandsCount = self.__g.RasterCount
         self.xSize = self.__g.RasterXSize
         self.ySize = self.__g.RasterYSize
@@ -28,17 +38,10 @@ class RasterDataReader:
         return (x, y, 1, 1) # left, top, x-size, y-size
 
     def getXYFromLatLng(self, lat, lng):
-        TOPLEFTX, RESX, _, TOPLEFTY, __, RESY = self.transform
-        realX = (lng - TOPLEFTX) / RESX - 1
-        realY = (lat - TOPLEFTY) / RESY - 1
-        x, y = round(realX), round(realY)
-        return x, y 
+        return geotransformLatLngToXY(self.transform, lat, lng)
 
     def getLatLngFromXY(self, x, y):
-        TOPLEFTX, RESX, _, TOPLEFTY, __, RESY = self.transform
-        lat = TOPLEFTY + (y + 1) * RESY
-        lng = TOPLEFTX + (x + 1) * RESX
-        return lat, lng
+        return geotransformXYToLatLng(self.transform, x, y)
 
     def __unpackData(self, data, dataType):
         dataTypeName = gdal.GetDataTypeName(dataType)
