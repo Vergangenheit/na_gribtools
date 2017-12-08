@@ -164,6 +164,7 @@ def downloadAndCompile(\
         print("Recording data...")
 
         for y in range(0, ySize):
+            #print("%4.2f" % ((y+1) / ySize * 100.0))
             xDataSet = [
                 raster.dumpBandLine(band, y)\
                 for raster, name, level, band in rasterSet]

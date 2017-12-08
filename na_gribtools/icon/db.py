@@ -136,7 +136,7 @@ class ICONDatabase:
 
         return ret
 
-    def cleanUp(self, beforeHours = 12):
+    def cleanUp(self, beforeHours=9):
         """Delete files whose run time is older as `beforeHours`."""
         assert type(beforeHours) == int and beforeHours > 0
         now = datetime.datetime.utcnow()
