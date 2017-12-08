@@ -133,16 +133,24 @@ def downloadAndCompile(\
 
         print("Creating an empty output file...")
         
-        raster = RasterDataReader(downloadedFiles[variableID])
+        rasterSet = []
+        for variableID in ICON_VARIABLE_INDEXES:
+            rasterSet.append((\
+                RasterDataReader(downloadedFiles[variableID]),
+                *ICON_VARIABLES[variableID]
+            )) # rasterReader, name, level, band
 
         print("Recording metadata...")
+
+        xSize, ySize = rasterSet[0][0].xSize, rasterSet[0][0].ySize
+        transform = rasterSet[0][0].transform
 
         metadataBin = json.dumps({
             "time": timeIdentifier,
             "forecast": forecastDiff,
-            "xSize": raster.xSize,
-            "ySize": raster.ySize,
-            "transform": raster.transform,
+            "xSize": xSize,
+            "ySize": ySize,
+            "transform": transform,
         }).encode("utf-8")
 
         metadataBinLength = len(metadataBin)
@@ -153,16 +161,21 @@ def downloadAndCompile(\
 
         headerLength = metadataBinLength + 2
 
-        print("Recording lat/lng info...")
+        print("Recording data...")
 
-        for y in range(0, raster.ySize):
-            for x in range(0, raster.xSize):
-                lat, lng = raster.getLatLngFromXY(x, y)
+        for y in range(0, ySize):
+            xDataSet = [
+                raster.dumpBandLine(band, y)\
+                for raster, name, level, band in rasterSet]
+            for x in range(0, xSize):
+                lat, lng = rasterSet[0][0].getLatLngFromXY(x, y)
+                xData = [each[x] for each in xDataSet]
                 f.write(struct.pack(
                     ICONDB_VARIABLES_PACKER,
-                    lat, lng, *((0,) * (ICONDB_VARIABLES_PER_ENTRY-2))
+                    lat, lng, *xData
                 ))
-    
+
+        """
         # ---- read raster data and dump into file
 
         # first 2 positions for lat & lng
@@ -184,6 +197,7 @@ def downloadAndCompile(\
                         ICONDB_SINGLE_VARIABLE_PACKER,
                         xData[x]
                     )
+                    continue
                     f.write(buf)
                     f.seek(
                         ICONDB_ENTRY_BYTES_SIZE - ICONDB_SINGLE_VARIABLE_BYTES_SIZE,
@@ -191,6 +205,7 @@ def downloadAndCompile(\
                     ) # skip to next
 
             perEntryOffset += ICONDB_SINGLE_VARIABLE_BYTES_SIZE
+        """
 
     return outputFile
 
