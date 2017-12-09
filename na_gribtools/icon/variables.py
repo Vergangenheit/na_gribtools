@@ -3,6 +3,7 @@
 ##############################################################################
 
 ICON_SINGLE_LEVEL = "single_level"
+ICON_PRESSURE_LEVEL = "pressure_level"
 ICON_LEVEL_1_85 = "model_level_1-85"
 ICON_LEVEL_86_90 = "model_level_86_90"
 
@@ -12,13 +13,13 @@ ICON_VARIABLES = {
 
     # id             name           level                        band
     "t_2m":         ("t_2m",        ICON_SINGLE_LEVEL,           1          ),
+    "td_2m":        ("td_2m",        ICON_SINGLE_LEVEL,          1          ),
     "tot_prec":     ("tot_prec",    ICON_SINGLE_LEVEL,           1          ),
     "ww":           ("ww",          ICON_SINGLE_LEVEL,           1          ),
-    "clcl":         ("clcl",        ICON_SINGLE_LEVEL,           1          ),
-    "clcm":         ("clcm",        ICON_SINGLE_LEVEL,           1          ),
-    "clch":         ("clch",        ICON_SINGLE_LEVEL,           1          ),
     "clct":         ("clct",        ICON_SINGLE_LEVEL,           1          ),
     "vmax_10m":     ("vmax_10m",    ICON_SINGLE_LEVEL,           1          ),
+    "p_surface":    ("ps",          ICON_SINGLE_LEVEL,           1          ),
+    "qv_surface":   ("qv_s",        ICON_SINGLE_LEVEL,           1          ),
 }
 
 ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())

@@ -2,11 +2,15 @@
 
 import sys
 from tabulate import tabulate
+
+from na_gribtools.config import ConfigParser
 from na_gribtools.icon.db import *
 from na_gribtools.icon.variables import *
 
+config = ConfigParser("./config.yaml")
+
 action = sys.argv[1].lower()
-db = ICONDatabase()
+db = ICONDatabase(config)
 
 if action == "download":
     for each in sys.argv[2:]:

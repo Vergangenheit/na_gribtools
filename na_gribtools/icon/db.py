@@ -16,9 +16,10 @@ DATASET_DELAY = datetime.timedelta(hours=3)
 
 class ICONDatabase:
 
-    def __init__(self, tempDir="/tmp/na_dwd/", resourceDir="./resources/"):
-        self.resourceDir = resourceDir
-        self.tempDir = tempDir
+    def __init__(self, config): 
+    # tempDir="/tmp/na_dwd/", resourceDir="./resources/"):
+        self.resourceDir = config.resourceDir
+        self.tempDir = config.workDir
 
     def __getDatasetFilename(\
         self, variableID, timeIdentifier, hours, ending=".grib2.bz2"
