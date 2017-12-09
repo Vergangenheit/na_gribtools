@@ -74,7 +74,29 @@ class ICONDatabase:
             downloadHour
         ), downloadTime
 
-    def downloadForecast(self, forecastHoursFromNow=6):
+    def __downloadAndCompile(self, timeIdentifier, hours):
+        downloadURLs = {} 
+        for variableID in ICON_VARIABLES:
+            downloadURLs[variableID] = \
+                self.__getURL(variableID, timeIdentifier, hours)
+
+        return downloadAndCompile(\
+            timeIdentifier, hours, downloadURLs,
+            tempDir=self.tempDir, resourceDir=self.resourceDir)
+
+    def downloadForecastFromRuntime(self, forecastHoursFromRuntime=1):
+        timeIdentifier, downloadTime = self.__getDownloadTimeInfo()
+        try:
+            assert type(forecastHoursFromRuntime) == int
+            assert forecastHoursFromRuntime in range(1, 181)
+            if forecastHoursFromRuntime > 78:
+                assert forecastHoursFromRuntime % 3 == 0
+        except:
+            raise Exception("Requested forecast hour invalid.")
+        return self.__downloadAndCompile(\
+            timeIdentifier, forecastHoursFromRuntime)
+
+    def downloadForecastFromNow(self, forecastHoursFromNow=6):
         """Download a set of forecasts and compile them into a database
         that we will read more easily. `forecastHoursFromNow` will be
         used to calculate the downloads needed from the latest whole hour,
@@ -96,16 +118,7 @@ class ICONDatabase:
         if forecastDiff > 180:
             forecastDiff = 180
 
-        # Generate download URLs
-
-        downloadURLs = {} 
-        for variableID in ICON_VARIABLES:
-            downloadURLs[variableID] = \
-                self.__getURL(variableID, timeIdentifier, forecastDiff)
-
-        return downloadAndCompile(\
-            timeIdentifier, forecastDiff, downloadURLs,
-            tempDir=self.tempDir, resourceDir=self.resourceDir)
+        return self.__downloadAndCompile(timeIdentifier, forecastDiff)
 
     def listDatabase(self):
         ret = {}

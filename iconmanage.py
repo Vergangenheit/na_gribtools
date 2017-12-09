@@ -13,8 +13,16 @@ action = sys.argv[1].lower()
 db = ICONDatabase(config)
 
 if action == "download":
-    for each in sys.argv[2:]:
-        filename = db.downloadForecast(int(each))
+    base = sys.argv[2]
+    if base == "now":
+        func = db.downloadForecastFromNow
+    elif base == "zero":
+        func = db.downloadForecastFromRuntime
+    else:
+        print("Usage: python3 iconmanage.py download <now|zero> hour(s)")
+        exit(1)
+    for each in sys.argv[3:]:
+        filename = func(int(each))
         print(filename)
 elif action == "query":
     allEntries = db.listDatabase()
