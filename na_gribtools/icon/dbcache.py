@@ -176,38 +176,6 @@ def downloadAndCompile(\
                     lat, lng, *xData
                 ))
 
-        """
-        # ---- read raster data and dump into file
-
-        # first 2 positions for lat & lng
-        perEntryOffset = 2 * ICONDB_SINGLE_VARIABLE_BYTES_SIZE
-
-        for variableID in ICON_VARIABLE_INDEXES:
-            # deal with this file specified by variableID
-
-            print("Dumping raster: %s" % variableID)
-            
-            name, level, band = ICON_VARIABLES[variableID]
-            raster = RasterDataReader(downloadedFiles[variableID])
-            f.seek(perEntryOffset + headerLength, os.SEEK_SET)
-            
-            for y in range(0, raster.ySize):
-                xData = raster.dumpBandLine(band, y) # get a whole line, quick
-                for x in range(0, raster.xSize):
-                    buf = struct.pack(
-                        ICONDB_SINGLE_VARIABLE_PACKER,
-                        xData[x]
-                    )
-                    continue
-                    f.write(buf)
-                    f.seek(
-                        ICONDB_ENTRY_BYTES_SIZE - ICONDB_SINGLE_VARIABLE_BYTES_SIZE,
-                        os.SEEK_CUR
-                    ) # skip to next
-
-            perEntryOffset += ICONDB_SINGLE_VARIABLE_BYTES_SIZE
-        """
-
     return outputFile
 
 

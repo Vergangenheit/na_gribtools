@@ -1,0 +1,2 @@
+resource: ./resources/
+workdir: /tmp/na_dwd/
