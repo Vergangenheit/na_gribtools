@@ -18,7 +18,11 @@ elif action == "query":
     lng = float(sys.argv[3])
 
     outputTable = []
-    outputTableHeaders = ["Lat", "Lng", "Forecast"] + ICON_VARIABLE_INDEXES
+    outputTableHeaders = [
+        "Lat",
+        "Lng",
+        "Forecast(UTC)"
+    ] + ICON_VARIABLE_INDEXES
 
     for each in allEntries:
         row = []
