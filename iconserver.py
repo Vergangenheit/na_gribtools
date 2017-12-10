@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-from tabulate import tabulate
 from bottle import *
 
 from na_gribtools.config import ConfigParser
@@ -23,6 +22,9 @@ def checkInput(lat, lng):
         return False
     return True
 
+def datetimeToStr(dt):
+    return dt.isoformat()
+
 ##############################################################################
 
 @route("/<lat:float>/<lng:float>/")
@@ -34,24 +36,19 @@ def query(lat, lng):
 
     allEntries = db.listDatabase()
 
-    outputTable = []
-    outputTableHeaders = [
-        "Lat",
-        "Lng",
-        "Forecast(UTC)"
-    ] + ICON_VARIABLE_INDEXES
+    ret = {}
 
     for each in allEntries:
-        row = []
         with db.getSingleForecast(*each) as x:
             q = x.query(lat, lng)
-            row += [q["lat"], q["lng"], q["forecast"]]
-            for variableID in ICON_VARIABLE_INDEXES:
-                row.append(q[variableID])
-        outputTable.append(row)
+            forecast = datetimeToStr(q["forecast"])
+            q["runtime"] = datetimeToStr(q["runtime"])
+            del q["forecast"]
+            if not forecast in ret:
+                ret[forecast] = []
+            ret[forecast].append(q)
     
-    outputTable.sort(key=lambda i: i[2])
-    return (tabulate(outputTable, headers=outputTableHeaders))
+    return ret
 
 
 run(host="127.0.0.1", port=7777)
