@@ -124,10 +124,11 @@ def downloadAndCompile(\
     # Compile files into a large db file
     
     outputFile = getICONDBPath(tempDir, timeIdentifier, forecastDiff)
+    outputFileTemp = outputFile + ".temp"
 
     print("Output set to: %s" % outputFile)
 
-    with open(outputFile, "wb+") as f:
+    with open(outputFileTemp, "wb+") as f:
         
         # ---- create file
 
@@ -175,6 +176,10 @@ def downloadAndCompile(\
                     ICONDB_VARIABLES_PACKER,
                     lat, lng, *xData
                 ))
+    
+    # Rename temp output to output
+
+    subprocess.check_output(["mv", outputFileTemp, outputFile])
 
     return outputFile
 

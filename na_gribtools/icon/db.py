@@ -162,7 +162,9 @@ class ICONDatabase:
             # filter
             if not os.path.isfile(fullpath): continue
             want = False
-            for suffix in [".icondb", ".grb2", ".grib2", ".grib2.bz2"]:
+            for suffix in [\
+                ".icondb", ".icondb.temp", ".grb2", ".grib2", ".grib2.bz2"
+            ]:
                 if fullpath.endswith(suffix):
                     want = True
                     break
