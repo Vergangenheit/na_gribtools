@@ -70,6 +70,7 @@ ICONDB_ENTRY_BYTES_SIZE = \
 # General functions
 
 def getICONDBPath(tempDir, timeIdentifier, forecastHours):
+    # TODO shall we used the forecasted time to make a db filename, so that when updating icondb with new dataset the service will not stop?
     return os.path.join(tempDir,
         "%s_%03d.icondb" % (timeIdentifier, forecastHours)
     )
