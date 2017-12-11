@@ -39,14 +39,11 @@ def query(lat, lng):
     ret = {}
 
     for each in allEntries:
-        with db.getSingleForecast(*each) as x:
+        with db.getSingleForecast(each) as x:
             q = x.query(lat, lng)
-            forecast = datetimeToStr(q["forecast"])
+            q["forecast"] = datetimeToStr(q["forecast"])
             q["runtime"] = datetimeToStr(q["runtime"])
-            del q["forecast"]
-            if not forecast in ret:
-                ret[forecast] = []
-            ret[forecast].append(q)
+            ret[q["forecast"]] = q
     
     return ret
 
