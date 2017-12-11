@@ -44,6 +44,8 @@ import subprocess
 import struct
 import json
 import re
+import hashlib
+import hmac
 
 from .variables import *
 from .gridconv import *
@@ -86,6 +88,7 @@ def getICONDBPath(tempDir, timestamp):
 ##############################################################################
 # Downloading and compiling function
 
+
 def __downloadByInstructions(instructions, tempDir):
     # returns a map from variableID to local file path
     ret = {}
@@ -109,11 +112,67 @@ def __downloadByInstructions(instructions, tempDir):
         if not os.path.isfile(ret[each]): return None
     return ret
 
+
+def __calculateChecksum(path, checksumKey, update=False):
+    """Calculate a file's checksum. If update==True, the checksum will be
+    recorded as '<path>.checksum'."""
+    hasher = hmac.new(checksumKey, None, hashlib.sha512)
+    with open(path, "rb") as f:
+        while True:
+            buf = f.read(1048576)
+            if not buf: break
+        hasher.update(buf)
+    result = hasher.hexdigest()
+    if update:
+        open(path + ".checksum", "w+").write(result)
+    return result
+
+
+def __decideOverwriteExistingDatabase(path, currentTimeIdentifier, checksumKey):
+    """Decide if the database specified with `path` is already the designated
+    output. If it has a different runtime as ours, or if it is corrupted(or
+    formed in an old structure), then return True for overwrite. If not, return
+    False and the download process will generate a brand new database."""
+    
+    # first, see if checksum is possible. if not, we can already overwrite it.
+    checksumFile = path + ".checksum"
+    if not os.path.isfile(checksumFile):
+        return True
+
+    # then try to read this database and see if model run time differ
+    raster = ICONDBReader(path)
+    existingTimeIdentifier = raster.metadata["time"]
+    if existingTimeIdentifier != currentTimeIdentifier:
+        return True
+
+    # verify checksum
+    foundChecksum = open(checksumFile, "r").read()
+    existingChecksum = __calculateChecksum(path, checksumKey)
+
+    return (foundChecksum != existingChecksum)
+
+
 def downloadAndCompile(\
     timeIdentifier, forecastDiff, instructions,
-    resourceDir="./resource", tempDir="/tmp/"
+    resourceDir="./resource", tempDir="/tmp/", checksumKey="default"
 ):
     """`instructions` must be a dict of variableID=>URL"""
+
+    # Decide output filenames
+
+    forecastTimeIdentifier = datetimeToTimeIdentifier(
+        timeIdentifierWithOffsetToDatetime(timeIdentifier, forecastDiff))
+    outputFile = getICONDBPath(tempDir, forecastTimeIdentifier)
+    outputFileTemp = outputFile + ".temp"
+    checksumKey = checksumKey.encode("utf-8")
+
+    if os.path.isfile(outputFile):
+        # If output file exists, decide if we need to overwrite it.
+        if not __decideOverwriteExistingDatabase(\
+            outputFile, timeIdentifier, checksumKey=checksumKey
+        ):
+            print("<%s> exists and should be usable. Skip." % outputFile)
+            return outputFile
 
     # Download Files
 
@@ -138,11 +197,6 @@ def downloadAndCompile(\
             raise Exception("A downloaded archive cannot be converted correctly.")
 
     # Compile files into a large db file
-    
-    forecastTimeIdentifier = datetimeToTimeIdentifier(
-        timeIdentifierWithOffsetToDatetime(timeIdentifier, forecastDiff))
-    outputFile = getICONDBPath(tempDir, forecastTimeIdentifier)
-    outputFileTemp = outputFile + ".temp"
 
     print("Output set to: %s" % outputFile)
 
@@ -203,15 +257,17 @@ def downloadAndCompile(\
                     lat, lng, *xData
                 ))
     
-    # Rename temp output to output
-
+    # Finalize and sign this file
+    
     subprocess.check_output(["mv", outputFileTemp, outputFile])
+    __calculateChecksum(outputFile, checksumKey, update=True)
 
     return outputFile
 
 
 ##############################################################################
 # Extracting info from a cache db
+
 
 class ICONDBReader:
 

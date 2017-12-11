@@ -21,6 +21,7 @@ class ICONDatabase:
         self.resourceDir = config.resourceDir
         self.tempDir = config.workDir
         self.archiveLife = config.archiveLife
+        self.checksumKey = config.checksumKey
 
     def __getDatasetFilename(\
         self, variableID, timeIdentifier, hours, ending=".grib2.bz2"
@@ -76,14 +77,20 @@ class ICONDatabase:
         ), downloadTime
 
     def __downloadAndCompile(self, timeIdentifier, hours):
+        """Generate instructions for downloader function and finally call
+        it."""
         downloadURLs = {} 
+
         for variableID in ICON_VARIABLES:
             downloadURLs[variableID] = \
                 self.__getURL(variableID, timeIdentifier, hours)
 
         return downloadAndCompile(\
             timeIdentifier, hours, downloadURLs,
-            tempDir=self.tempDir, resourceDir=self.resourceDir)
+            tempDir=self.tempDir,
+            resourceDir=self.resourceDir,
+            checksumKey=self.checksumKey
+        )
 
     def downloadForecastFromRuntime(self, forecastHoursFromRuntime=1):
         timeIdentifier, downloadTime = self.__getDownloadTimeInfo()

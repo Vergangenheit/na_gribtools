@@ -2,6 +2,17 @@ resource: ./resources/
 workdir: /tmp/na_dwd/
 
 
+# Checksum Key. This key is used in calculating the icondb's checksum. If this
+# is changed, all checksums will also be calculated differently.
+#
+# Since checksums are used in telling whether a ICONDB cache is generated
+# successfully as a last resort(especially whether it shall be overwrited),
+# you may not want to change this frequently. But if a ICONDB is subject to
+# change its structure as a consequence by modifications on
+# `icon/variables.py`, it's then the right time to set another key.
+checksum-key: verison-1
+
+
 # How many hours will an archive file be retained in local database. Suggested
 # to set this using following formula:
 #   archive-life = (interval of data release) + (delay of each data release)

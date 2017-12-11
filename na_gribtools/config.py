@@ -12,5 +12,6 @@ class ConfigParser:
         self.resourceDir = os.path.realpath(self.__yaml["resource"])
         self.workDir = os.path.realpath(self.__yaml["workdir"])
         self.archiveLife = int(self.__yaml["archive-life"])
+        self.checksumKey = self.__yaml["checksum-key"]
 
         assert self.archiveLife > 0
