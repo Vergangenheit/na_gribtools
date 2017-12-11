@@ -69,21 +69,18 @@ ICONDB_ENTRY_BYTES_SIZE = \
 ##############################################################################
 # General functions
 
-def getICONDBPath(tempDir, timeIdentifier, forecastHours):
+def getICONDBPath(tempDir, timestamp):
     """Decide the .icondb filename based on time identifier and forecast
     hours."""
-    dt = timeIdentifierToDatetime(timeIdentifier)
-    delta = datetime.timedelta(hours=forecastHours)
-    ndtStr = datetimeToTimeIdentifier(dt+delta)
+    assert type(timestamp) == str
+    assert re.match("^[0-9]{10}$", timestamp) != None
 
     # shall we used the forecasted time to make a db filename, so that when
     # updating icondb with new dataset the service will not stop?
-    return os.path.join(tempDir, "forecast-%s.icondb" % ndtStr)
+    return os.path.join(tempDir, "forecast-%s.icondb" % timestamp)
 
     # old: use runtime+forecastHours
-    return os.path.join(tempDir,
-        "%s.icondb" % (timeIdentifier, forecastHours)
-    )
+    #return os.path.join(tempDir, "%s.icondb" % (timeIdentifier, forecastHours))
 
 
 ##############################################################################
@@ -129,12 +126,22 @@ def downloadAndCompile(\
     if not downloadedFiles:
         raise Exception("One or more files cannot be downloaded.")
     for variableID in downloadedFiles:
-        downloadedFiles[variableID] = convertDWDGrid(
-            resourceDir, downloadedFiles[variableID], True)
+        try:
+            downloadedFiles[variableID] = convertDWDGrid(
+                resourceDir, downloadedFiles[variableID], True)
+        except:
+            print("A downloaded archive cannot be converted correctly.")
+            print(downloadedFiles[variableID])
+            if os.path.isfile(downloadedFiles[variableID]):
+                os.unlink(downloadedFiles[variableID])
+                print("This file has been deleted. Run script again.")
+            raise Exception("A downloaded archive cannot be converted correctly.")
 
     # Compile files into a large db file
     
-    outputFile = getICONDBPath(tempDir, timeIdentifier, forecastDiff)
+    forecastTimeIdentifier = datetimeToTimeIdentifier(
+        timeIdentifierWithOffsetToDatetime(timeIdentifier, forecastDiff))
+    outputFile = getICONDBPath(tempDir, forecastTimeIdentifier)
     outputFileTemp = outputFile + ".temp"
 
     print("Output set to: %s" % outputFile)
@@ -147,10 +154,18 @@ def downloadAndCompile(\
         
         rasterSet = []
         for variableID in ICON_VARIABLE_INDEXES:
-            rasterSet.append((\
-                RasterDataReader(downloadedFiles[variableID]),
-                *ICON_VARIABLES[variableID]
-            )) # rasterReader, name, level, band
+            try:
+                rasterSet.append((\
+                    RasterDataReader(downloadedFiles[variableID]),
+                    *ICON_VARIABLES[variableID]
+                )) # rasterReader, name, level, band
+            except:
+                print("A dataset cannot be read correctly.")
+                print(downloadedFiles[variableID])
+                if os.path.isfile(downloadedFiles[variableID]):
+                    os.unlink(downloadedFiles[variableID])
+                    print("This file has been deleted. Run script again.")
+                raise Exception("A dataset cannot be read correctly.")
 
         print("Recording metadata...")
 

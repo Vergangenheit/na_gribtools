@@ -33,11 +33,13 @@ def convertDWDGrid(resourceDir, inputFile, removeOnSuccess=True):
         else:
             raise Exception("Input must be a .grib2 or .grib2.bz2 file.")
 
+        outputFileTemp = outputFile + ".temp"
         command = [\
             "cdo", "-f", "grb2", "remap,%s,%s" % (targetFile, weightFile), \
-            inputFile, outputFile
+            inputFile, outputFileTemp
         ]
         subprocess.check_output(command)
+        subprocess.check_output(["mv", outputFileTemp, outputFile])
         assert os.path.isfile(outputFile)
     except Exception as e:
         raise e

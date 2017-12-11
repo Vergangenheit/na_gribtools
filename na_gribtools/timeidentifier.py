@@ -3,6 +3,10 @@
 import datetime
 import re
 
+def timeIdentifierWithOffsetToDatetime(timeIdentifier, delta):
+    dt = timeIdentifierToDatetime(timeIdentifier)
+    return dt + datetime.timedelta(hours=delta)
+
 def timeIdentifierToDatetime(s):
     year = int(s[0:4])
     month = int(s[4:6])

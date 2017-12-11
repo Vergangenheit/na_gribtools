@@ -38,7 +38,7 @@ elif action == "query":
 
     for each in allEntries:
         row = []
-        with db.getSingleForecast(*each) as x:
+        with db.getSingleForecast(each) as x:
             q = x.query(lat, lng)
             row += [q["lat"], q["lng"], q["forecast"]]
             for variableID in ICON_VARIABLE_INDEXES:
