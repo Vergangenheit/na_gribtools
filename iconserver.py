@@ -25,27 +25,38 @@ def checkInput(lat, lng):
 def datetimeToStr(dt):
     return dt.isoformat()
 
-##############################################################################
-
-@route("/<lat:float>/<lng:float>/")
-def query(lat, lng):
+def retrieveForecasts(lat, lng):
     global db
-
-    if not checkInput(lat, lng):
-        return abort(400, "Latitude and/or longitude invalid.")
-
     allEntries = db.listDatabase()
-
     ret = {}
-
     for each in allEntries:
         with db.getSingleForecast(each) as x:
             q = x.query(lat, lng)
             q["forecast"] = datetimeToStr(q["forecast"])
             q["runtime"] = datetimeToStr(q["runtime"])
             ret[q["forecast"]] = q
-    
     return ret
+
+##############################################################################
+
+@route("/<lat:float>/<lng:float>/")
+def query(lat, lng):
+    if not checkInput(lat, lng):
+        return abort(400, "Latitude and/or longitude invalid.")
+    forecasts = retrieveForecasts(lat, lng)
+    countForecasts = len(forecasts)
+    metadata = {
+        "count": countForecasts,
+        "queryCoordinates": [lat, lng],
+    }
+    if countForecasts > 0:
+        forecastLat = forecasts[forecasts.keys()[0]]["lat"]
+        forecastLng = forecasts[forecasts.keys()[0]]["lng"]
+        metadata["forecastCoordinates"] = [forecastLat, forecastLng]
+    else:
+        metadata["forecastCoordinates"] = [lat, lng]
+
+    return { "metadata": metadata, "forecasts": forecasts }
 
 
 run(host="127.0.0.1", port=7777)
