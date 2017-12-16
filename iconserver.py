@@ -50,8 +50,9 @@ def query(lat, lng):
         "queryCoordinates": [lat, lng],
     }
     if countForecasts > 0:
-        forecastLat = forecasts[forecasts.keys()[0]]["lat"]
-        forecastLng = forecasts[forecasts.keys()[0]]["lng"]
+        sampleForecast = forecasts[list(forecasts.keys())[0]]
+        forecastLat = sampleForecast["lat"]
+        forecastLng = sampleForecast["lng"]
         metadata["forecastCoordinates"] = [forecastLat, forecastLng]
     else:
         metadata["forecastCoordinates"] = [lat, lng]
