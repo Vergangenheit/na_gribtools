@@ -23,7 +23,7 @@ def checkInput(lat, lng):
     return True
 
 def datetimeToStr(dt):
-    return dt.isoformat()
+    return dt.isoformat() + "Z"
 
 def retrieveForecasts(lat, lng):
     global db
