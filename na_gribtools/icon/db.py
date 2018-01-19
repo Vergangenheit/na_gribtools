@@ -128,6 +128,40 @@ class ICONDatabase:
 
         return self.__downloadAndCompile(timeIdentifier, forecastDiff)
 
+    def listGRB2ForImages(self):
+        """List and parse all .grb2 original files in archive directory.
+        
+        Returns: a list, each item is a dict containing:
+            * path: the full path to given .grb2 file.
+            * config: 
+        """
+        ret = []
+        gribArchives = filterDirWithSuffix(self.tempDir, [".grb2"])
+        for fullpath in gribArchives:
+            filename = os.path.split(fullpath)[-1]
+            try:
+                match = re.search("([0-9]{10})_([0-9]{3})", filename)
+                runTime = timeIdentifierToDatetime(match.group(1))
+                forecastHours = int(match.group(2))
+                forecastTime = \
+                    runTime + datetime.timedelta(hours=forecastHours)
+            except:
+                continue
+            # check if this file might be an interested image output based on
+            # definition from `na_gribtools/icon/variables.py`
+            for interested in ICON_IMAGE_OUTPUT:
+                varConfig = ICON_VARIABLES[interested]
+                varName, varLevel, _ = varConfig
+                if varName.upper() in filename and varLevel in filename:
+                    ret.append({
+                        "path": fullpath,
+                        "item": interested,
+                        "config": ICON_IMAGE_OUTPUT[interested],
+                        "runtime": runTime,
+                        "forecast": forecastTime,
+                    })
+        return ret
+
     def listDatabase(self):
         ret = {} 
 

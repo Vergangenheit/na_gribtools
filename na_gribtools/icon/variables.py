@@ -2,6 +2,8 @@
 
 ##############################################################################
 
+# Basic configuration of all interested variables
+
 ICON_SINGLE_LEVEL = "single_level"
 ICON_PRESSURE_LEVEL = "pressure_level"
 ICON_LEVEL_1_85 = "model_level_1-85"
@@ -26,7 +28,19 @@ ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())
 
 ##############################################################################
 
-# verification code
+# Configuration of image outputs, including a selection of variables that will
+# participate, and other details.
+
+# Following dict defines rules that will match any downloaded and unzipped
+# .grb2 file in data directory. They will be checked for output and 
+
+ICON_IMAGE_OUTPUT = {
+    "t_2m": (),
+}
+
+##############################################################################
+
+# Verification code. Just to ensure all configurations are possible.
 
 __ICON_ALL_VARIABLES =[\
     "alb_rad", "asob_s", "aswdifd_s", "aswdifu_s", "aswdir_s", "cape_con",
@@ -39,4 +53,5 @@ __ICON_ALL_VARIABLES =[\
 ] # just a list of all possible variables
 
 assert set([i[1][0] for i in ICON_VARIABLES.items()]).issubset(\
-    set(__ICON_ALL_VARIABLES)) 
+    set(__ICON_ALL_VARIABLES))
+assert set(ICON_IMAGE_OUTPUT.keys()).issubset(set(ICON_VARIABLES.keys()))

@@ -5,6 +5,7 @@ from tabulate import tabulate
 
 from na_gribtools.config import ConfigParser
 from na_gribtools.icon.db import *
+from na_gribtools.icon.grb2toimages import *
 from na_gribtools.icon.variables import *
 
 config = ConfigParser("./config.yaml")
@@ -24,6 +25,7 @@ if action == "download":
     for each in sys.argv[3:]:
         filename = func(int(each))
         print(filename)
+
 elif action == "query":
     allEntries = db.listDatabase()
     lat = float(sys.argv[2])
@@ -47,7 +49,13 @@ elif action == "query":
     
     outputTable.sort(key=lambda i: i[2])
     print(tabulate(outputTable, headers=outputTableHeaders))
+
+elif action == "image":
+    for task in db.listGRB2ForImages():
+        doGRB2ToImageTask(task)
+
 elif action == "clean":
     db.cleanUp()
+
 else:
     print("Wrong usage.")
