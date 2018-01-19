@@ -190,7 +190,7 @@ class ICONDatabase:
         # delete old icondb files
 
         icondbFiles = filterDirWithSuffix(
-            self.tempDir, [".icondb", ".icondb.temp"])
+            self.tempDir, [".icondb", ".icondb.temp", ".icondb.checksum"])
         for path in icondbFiles:
             filename = os.path.split(path)[-1]
             match = re.search("forecast\\-([0-9]{10})", filename)
