@@ -42,14 +42,15 @@ class ColorReliefParser:
 
 def getLegendedImage(
     imgFilename, colorreliefFile, datarange=None, time=None, title=None,
-    useNearestColor=True, config=None, baseHeight=20
+    signature="NeoAtlantis", unit=None, useNearestColor=True, config=None,
+    baseHeight=20
 ):
-    assert config != None
+    assert config != None and time != None
     
     colorRelief = ColorReliefParser(colorreliefFile, useNearestColor)
     font = ImageFont.truetype(
         font=config.resourceDir("font.ttf"),
-        size=int(baseHeight * 0.9)
+        size=int(baseHeight * 0.8)
     )
     img = Image.open(imgFilename)
 
@@ -61,7 +62,7 @@ def getLegendedImage(
 
     # Generate bar of legend 
     
-    bar = Image.new(img.mode, (width, baseHeight*3), (255, 255, 255))
+    bar = Image.new(img.mode, (width, baseHeight*4), (255, 255, 255))
     barDraw = ImageDraw.Draw(bar)
 
     # ---- color relief
@@ -83,11 +84,35 @@ def getLegendedImage(
             barDraw.text((x, 0), text, fill="black", font=font)
         v += 0.1
 
-    # ---- Unit mark
+    # ---- Unit mark, Timestamp
 
-    barDraw.text((0, 2*baseHeight), "Unit: ...", font=font, fill="black")
+    write = lambda text, x, l: barDraw.text((x, l * baseHeight), text, font=font, fill="black")
 
-    bar.show()
+    titleText = "%s [%s]" % (str(title), unit)
+    titleTextSize = font.getsize(titleText)
+    write(titleText, (width-titleTextSize[0])/2, 2)
 
+    write("Forecast for: %04d-%02d-%02d %02d:%02d (UTC)" % (
+        time.year,
+        time.month,
+        time.day, 
+        time.hour,
+        time.minute
+    ), 0, 3)
 
-    exit()
+    if signature:
+        signatureSize = font.getsize(signature)
+        write(signature, (width - signatureSize[0]), 3)
+
+    # paste bar into image
+
+    newImg = Image.new(img.mode, (width, img.size[1] + bar.size[1]))
+    newImg.paste(img, (0, 0))
+    newImg.paste(bar, (0, img.size[1]))
+
+    img.close()
+    bar.close()
+    del img
+    del bar
+
+    newImg.save(imgFilename)

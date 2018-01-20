@@ -34,23 +34,34 @@ ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())
 # Following dict defines rules that will match any downloaded and unzipped
 # .grb2 file in data directory. They will be checked for output and 
 
+ICON_IMAGE_SIGNATURE = "Data: Deutscher Wetterdienst, plot by NeoAtlantis."
+
 ICON_IMAGE_OUTPUT = {
     "t_2m": {
         "type": "color-relief",
         "color": "t_2m.txt",
         "border-color": (0, 0, 0),
         "gdaldem-options": ["-nearest_color_entry"],
+        "title": "Ground Temperature at 2m Height",
+        "unit": "°C",
+        "signature": ICON_IMAGE_SIGNATURE
     },
     "clct": {
         "type": "color-relief",
         "color": "clct.txt",
         "border-color": (255, 0, 0),
+        "title": "Total Cloud Cover",
+        "unit": "%",
+        "signature": ICON_IMAGE_SIGNATURE
     },
     "vmax_10m": {
         "type": "color-relief",
         "color": "vmax_10m.txt",
         "border-color": (0, 0, 0),
         "gdaldem-options": ["-nearest_color_entry"],
+        "title": "10m Gust",
+        "unit": "m/s",
+        "signature": ICON_IMAGE_SIGNATURE
     },
 }
 

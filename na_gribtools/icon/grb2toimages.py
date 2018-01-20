@@ -190,7 +190,10 @@ def doGRB2ToImageTask(task, config=None, forced=False):
                 colorReliefFile,
                 useNearestColor=colorReliefUseNearestColor,
                 time=task["forecast"],
-                config=config
+                config=config,
+                title=outputConfig["title"],
+                unit=outputConfig["unit"],
+                signature=outputConfig["signature"]
             )
     else:
         return
