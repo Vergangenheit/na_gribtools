@@ -42,10 +42,15 @@ class ColorReliefParser:
 
 def getLegendedImage(
     imgFilename, colorreliefFile, datarange=None, time=None, title=None,
-    useNearestColor=True, config=None
+    useNearestColor=True, config=None, baseHeight=20
 ):
     assert config != None
+    
     colorRelief = ColorReliefParser(colorreliefFile, useNearestColor)
+    font = ImageFont.truetype(
+        font=config.resourceDir("font.ttf"),
+        size=int(baseHeight * 0.9)
+    )
     img = Image.open(imgFilename)
 
     width, height = img.size
@@ -54,22 +59,19 @@ def getLegendedImage(
     else:
         colorReliefRange = datarange
 
-    barHeight = 20
-
-    # generate bar of color reliefs
+    # Generate bar of legend 
     
-    barColor = Image.new(img.mode, (width, barHeight))
-    barDraw = ImageDraw.Draw(barColor)
+    bar = Image.new(img.mode, (width, baseHeight*3), (255, 255, 255))
+    barDraw = ImageDraw.Draw(bar)
+
+    # ---- color relief
+
     for x in range(0, width):
         v = interpol(0, x, width, *colorReliefRange)
         color = colorRelief.get(v)
-        barDraw.line([(x, 0), (x, barHeight)], fill=color)
-    del barDraw
+        barDraw.line([(x, baseHeight), (x, baseHeight*2)], fill=color)
 
-    # generate bar of numbers
-
-    barText = Image.new(img.mode, (width, barHeight), (255, 255, 255))
-    barDraw = ImageDraw.Draw(barText)
+    # ---- text over color relief
 
     v1 = round(colorReliefRange[0], 1)
     v2 = round(colorReliefRange[1], 1)
@@ -78,11 +80,14 @@ def getLegendedImage(
         if int(v * 10) % 10 == 0 and int(v) % 5 == 0:
             text = str(int(v))
             x = interpol(colorReliefRange[0], v, colorReliefRange[1], 0, width)
-            barDraw.text((x, 0), text, fill=(0, 0, 0))
+            barDraw.text((x, 0), text, fill="black", font=font)
         v += 0.1
-    del barDraw
-    barText.show()
 
+    # ---- Unit mark
+
+    barDraw.text((0, 2*baseHeight), "Unit: ...", font=font, fill="black")
+
+    bar.show()
 
 
     exit()
