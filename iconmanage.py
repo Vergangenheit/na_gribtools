@@ -52,7 +52,7 @@ elif action == "query":
 
 elif action == "image":
     for task in db.listGRB2ForImages():
-        doGRB2ToImageTask(task)
+        doGRB2ToImageTask(task, config=config, forced=True)
 
 elif action == "clean":
     db.cleanUp()

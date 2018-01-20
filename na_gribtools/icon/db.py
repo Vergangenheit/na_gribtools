@@ -156,6 +156,7 @@ class ICONDatabase:
                     ret.append({
                         "path": fullpath,
                         "item": interested,
+                        "definition": varConfig,
                         "config": ICON_IMAGE_OUTPUT[interested],
                         "runtime": runTime,
                         "forecast": forecastTime,
