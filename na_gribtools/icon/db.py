@@ -225,10 +225,11 @@ class ICONDatabase:
         # delete old icondb files
 
         icondbFiles = filterDirWithSuffix(
-            self.tempDir, [".icondb", ".icondb.temp"])
+            self.tempDir, [".icondb", ".icondb.temp", ".png", ".tiff"])
         for path in icondbFiles:
             filename = os.path.split(path)[-1]
-            match = re.search("forecast\\-([0-9]{10})", filename)
+            match = re.search("\\-([0-9]{10})\\.", filename)
+            if not match: continue
             try:
                 runTime = timeIdentifierToDatetime(match.group(1))
                 if isOlderThan(runTime, deleteICONDBWithForecastTimeBefore):
