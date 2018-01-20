@@ -21,6 +21,7 @@ import sys
 import json
 
 from ..timeidentifier import * 
+from ..imagelegends import *
 from .variables import *
 
 
@@ -139,14 +140,12 @@ def doGRB2ToImageTask(task, config=None, forced=False):
     workType = outputConfig["type"]
 
     if "color-relief" == workType:
+        colorReliefFile = config.resourceDir(outputConfig["color"])
+
         cmd = [ "gdaldem", "color-relief" ]
         if "gdaldem-options" in outputConfig:
             cmd += outputConfig["gdaldem-options"]
-        cmd += [
-            inputFile,
-            config.resourceDir(outputConfig["color"]),
-            rasterFilename
-        ]
+        cmd += [inputFile, colorReliefFile, rasterFilename]
         subprocess.check_output(cmd)
 
         for regionName in ICON_IMAGE_REGIONS:
@@ -180,6 +179,19 @@ def doGRB2ToImageTask(task, config=None, forced=False):
                     ["mv", outputFilenameTemp, outputFilename])
             except Exception as e:
                 print(e)
+
+            colorReliefUseNearestColor = False
+            if "gdaldem-options" in outputConfig:
+                if "-nearest_color_entry" in outputConfig["gdaldem-options"]:
+                    colorReliefUseNearestColor = True
+                    
+            getLegendedImage(
+                outputFilename,
+                colorReliefFile,
+                useNearestColor=colorReliefUseNearestColor,
+                time=task["forecast"],
+                config=config
+            )
     else:
         return
     
