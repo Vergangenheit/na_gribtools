@@ -26,14 +26,22 @@ class ICONDatabase:
     def __getDatasetFilename(\
         self, variableID, timeIdentifier, hours, ending=".grib2.bz2"
     ):
+        #icon_global_icosahedral_single-level_2018111900_000_ALB_RAD.grib2.bz2
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
-        return "ICON_iko_%s_elements_world_%s_%s_%03d%s" % (\
+        return "icon_global_icosahedral_%s_%s_%03d_%s%s" % (
+            vLevel.lower(),
+            timeIdentifier,
+            hours,
+            vName.upper(),
+            ending
+        )
+        """return "ICON_iko_%s_elements_world_%s_%s_%03d%s" % (\
             vLevel,
             vName.upper(),
             timeIdentifier,
             hours,
             ending
-        )
+        )"""
 
     def __getURL(self, variableID, timeIdentifier, hours=6):
         """Generate a download URL for a given variable defined in
@@ -57,7 +65,8 @@ class ICONDatabase:
             raise Exception("Invalid forecast hour.")
 
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
-        URL = "https://opendata.dwd.de/weather/icon/global/grib/"
+        #https://opendata.dwd.de/weather/nwp/icon/grib/00/alb_rad/icon_global_icosahedral_single-level_2018111900_000_ALB_RAD.grib2.bz2
+        URL = "https://opendata.dwd.de/weather/nwp/icon/grib/"
         URL += timeIdentifier[-2:] + "/" + vName.lower() + "/"
         URL += self.__getDatasetFilename(\
             variableID, timeIdentifier, hours, ".grib2.bz2")
@@ -128,6 +137,41 @@ class ICONDatabase:
 
         return self.__downloadAndCompile(timeIdentifier, forecastDiff)
 
+    def listGRB2ForImages(self):
+        """List and parse all .grb2 original files in archive directory.
+        
+        Returns: a list, each item is a dict containing:
+            * path: the full path to given .grb2 file.
+            * config: 
+        """
+        ret = []
+        gribArchives = filterDirWithSuffix(self.tempDir, [".grb2"])
+        for fullpath in gribArchives:
+            filename = os.path.split(fullpath)[-1]
+            try:
+                match = re.search("([0-9]{10})_([0-9]{3})", filename)
+                runTime = timeIdentifierToDatetime(match.group(1))
+                forecastHours = int(match.group(2))
+                forecastTime = \
+                    runTime + datetime.timedelta(hours=forecastHours)
+            except:
+                continue
+            # check if this file might be an interested image output based on
+            # definition from `na_gribtools/icon/variables.py`
+            for interested in ICON_IMAGE_OUTPUT:
+                varConfig = ICON_VARIABLES[interested]
+                varName, varLevel, _ = varConfig
+                if varName.upper() in filename and varLevel in filename:
+                    ret.append({
+                        "path": fullpath,
+                        "item": interested,
+                        "definition": varConfig,
+                        "config": ICON_IMAGE_OUTPUT[interested],
+                        "runtime": runTime,
+                        "forecast": forecastTime,
+                    })
+        return ret
+
     def listDatabase(self):
         ret = {} 
 
@@ -190,10 +234,17 @@ class ICONDatabase:
         # delete old icondb files
 
         icondbFiles = filterDirWithSuffix(
-            self.tempDir, [".icondb", ".icondb.temp", ".icondb.checksum"])
+            self.tempDir, [
+                ".icondb",
+                ".icondb.temp",
+                ".icondb.checksum",
+                ".png",
+                ".tiff"
+            ])
         for path in icondbFiles:
             filename = os.path.split(path)[-1]
-            match = re.search("forecast\\-([0-9]{10})", filename)
+            match = re.search("\\-([0-9]{10})\\.", filename)
+            if not match: continue
             try:
                 runTime = timeIdentifierToDatetime(match.group(1))
                 if isOlderThan(runTime, deleteICONDBWithForecastTimeBefore):

@@ -59,5 +59,36 @@ def query(lat, lng):
 
     return { "metadata": metadata, "forecasts": forecasts }
 
+@get("/<region:re:[a-z]+>/<varname>/")
+def listImages(region, varname):
+    if not (region in ICON_IMAGE_REGIONS and varname in ICON_IMAGE_OUTPUT):
+        return abort(404, "Requested combination is invalid.")
+
+    ending = ".%s.png" % region
+    lst = [
+        i[:-len(ending)][-10:] \
+        for i in os.listdir(config.workDir)\
+        if (\
+            i.startswith("image") and \
+            i.endswith(ending) and \
+            varname in i
+        )
+    ]
+    return "<br />".join([
+        """<a href="/%s/%s/%s">%s</a>""" % (
+            region, varname, each, each
+        ) for each in lst
+    ])
+
+@get("/<region:re:[a-z]+>/<varname>/<timestamp:re:[0-9]{10}>")
+def serveImage(region, varname, timestamp):
+    if not (region in ICON_IMAGE_REGIONS and varname in ICON_IMAGE_OUTPUT):
+        return abort(404, "Requested combination is invalid.")
+    filename = "image-%s-%s.%s.png" % (varname, timestamp, region)
+    fullpath = config.workDir(filename)
+    if not os.path.isfile(fullpath):
+        return abort(404, "File does not exist.")
+    return static_file(filename, root=config.workDir)
+
 
 run(host="127.0.0.1", port=7777)
