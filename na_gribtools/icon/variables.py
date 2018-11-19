@@ -4,7 +4,7 @@
 
 # Basic configuration of all interested variables
 
-ICON_SINGLE_LEVEL = "single_level"
+ICON_SINGLE_LEVEL = "single-level"
 ICON_PRESSURE_LEVEL = "pressure_level"
 ICON_LEVEL_1_85 = "model_level_1-85"
 ICON_LEVEL_86_90 = "model_level_86_90"

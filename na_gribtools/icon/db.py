@@ -26,14 +26,22 @@ class ICONDatabase:
     def __getDatasetFilename(\
         self, variableID, timeIdentifier, hours, ending=".grib2.bz2"
     ):
+        #icon_global_icosahedral_single-level_2018111900_000_ALB_RAD.grib2.bz2
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
-        return "ICON_iko_%s_elements_world_%s_%s_%03d%s" % (\
+        return "icon_global_icosahedral_%s_%s_%03d_%s%s" % (
+            vLevel.lower(),
+            timeIdentifier,
+            hours,
+            vName.upper(),
+            ending
+        )
+        """return "ICON_iko_%s_elements_world_%s_%s_%03d%s" % (\
             vLevel,
             vName.upper(),
             timeIdentifier,
             hours,
             ending
-        )
+        )"""
 
     def __getURL(self, variableID, timeIdentifier, hours=6):
         """Generate a download URL for a given variable defined in
@@ -57,7 +65,8 @@ class ICONDatabase:
             raise Exception("Invalid forecast hour.")
 
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
-        URL = "https://opendata.dwd.de/weather/icon/global/grib/"
+        #https://opendata.dwd.de/weather/nwp/icon/grib/00/alb_rad/icon_global_icosahedral_single-level_2018111900_000_ALB_RAD.grib2.bz2
+        URL = "https://opendata.dwd.de/weather/nwp/icon/grib/"
         URL += timeIdentifier[-2:] + "/" + vName.lower() + "/"
         URL += self.__getDatasetFilename(\
             variableID, timeIdentifier, hours, ".grib2.bz2")
