@@ -9,3 +9,6 @@ config.yaml
 *.tiff
 resources/*.nc
 *~
+venv/
+env/
+tmp/

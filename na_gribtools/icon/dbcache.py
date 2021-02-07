@@ -46,6 +46,7 @@ import json
 import re
 import hashlib
 import hmac
+from typing import Union, Dict
 
 from .variables import *
 from .gridconv import *
@@ -71,11 +72,11 @@ ICONDB_ENTRY_BYTES_SIZE = \
 ##############################################################################
 # General functions
 
-def getICONDBPath(tempDir, timestamp):
+def getICONDBPath(tempDir: str, timestamp: str) -> str:
     """Decide the .icondb filename based on time identifier and forecast
     hours."""
     assert type(timestamp) == str
-    assert re.match("^[0-9]{10}$", timestamp) != None
+    assert re.match("^[0-9]{10}$", timestamp) is not None
 
     # shall we used the forecasted time to make a db filename, so that when
     # updating icondb with new dataset the service will not stop?
@@ -153,18 +154,18 @@ def __decideOverwriteExistingDatabase(path, currentTimeIdentifier, checksumKey):
 
 
 def downloadAndCompile(\
-    timeIdentifier, forecastDiff, instructions,
-    resourceDir="./resource", tempDir="/tmp/", checksumKey="default"
-):
+    timeIdentifier: str, forecastDiff: int, instructions: Dict,
+    resourceDir: str = "./resource", tempDir: str ="/tmp/", checksumKey: str ="default"
+) -> Union[bytes, str]:
     """`instructions` must be a dict of variableID=>URL"""
 
     # Decide output filenames
 
-    forecastTimeIdentifier = datetimeToTimeIdentifier(
+    forecastTimeIdentifier: str = datetimeToTimeIdentifier(
         timeIdentifierWithOffsetToDatetime(timeIdentifier, forecastDiff))
-    outputFile = getICONDBPath(tempDir, forecastTimeIdentifier)
-    outputFileTemp = outputFile + ".temp"
-    checksumKey = checksumKey.encode("utf-8")
+    outputFile: str = getICONDBPath(tempDir, forecastTimeIdentifier)
+    outputFileTemp: str = outputFile + ".temp"
+    checksumKey: str = checksumKey.encode("utf-8")
 
     if os.path.isfile(outputFile):
         # If output file exists, decide if we need to overwrite it.
@@ -278,9 +279,10 @@ class ICONDBReader:
         with open(filename, "rb") as f:
             f.seek(0, os.SEEK_SET)
             metadataBinLength = struct.unpack("<H", f.read(2))[0]
-            metadata = f.read(metadataBinLength)
-            self.dataOffset = metadataBinLength + 2
-            self.metadata = json.loads(metadata.decode("utf-8"))
+            metadata: bytes = f.read(metadataBinLength)
+            self.dataOffset: int = metadataBinLength + 2
+            self.metadata: Dict = json.loads(metadata.decode("utf-8"))
+            print(f'metadata is of type {type(self.metadata)}')
 
         self.__filename = filename
         self.__xSize = self.metadata["xSize"]
@@ -299,7 +301,9 @@ class ICONDBReader:
     def __exit__(self, *args, **argv):
         self.__f.close()
 
-    def query(self, lat, lng):
+    def query(self, lat: float, lng: float) -> Dict:
+        x: int
+        y: int
         x, y = geotransformLatLngToXY(self.__transform, lat, lng)
         offset = self.dataOffset +\
             (y * self.__xSize + x) * ICONDB_ENTRY_BYTES_SIZE
@@ -307,7 +311,7 @@ class ICONDBReader:
         data = struct.unpack(
             ICONDB_VARIABLES_PACKER,
             self.__f.read(ICONDB_ENTRY_BYTES_SIZE))
-        ret = {
+        ret: Dict = {
             "lat": data[0],
             "lng": data[1],
             "runtime": self.__runTime,

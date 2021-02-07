@@ -2,7 +2,7 @@
 
 import sys
 from tabulate import tabulate
-
+from typing import List, Dict
 from na_gribtools.config import ConfigParser
 from na_gribtools.icon.db import *
 from na_gribtools.icon.grb2toimages import *
@@ -10,11 +10,11 @@ from na_gribtools.icon.variables import *
 
 config = ConfigParser("./config.yaml")
 
-action = sys.argv[1].lower()
-db = ICONDatabase(config)
+action: str = sys.argv[1].lower()
+db: ICONDatabase = ICONDatabase(config)
 
 if action == "download":
-    base = sys.argv[2]
+    base: str = sys.argv[2]
     if base == "now":
         func = db.downloadForecastFromNow
     elif base == "zero":
@@ -27,21 +27,21 @@ if action == "download":
         print(filename)
 
 elif action == "query":
-    allEntries = db.listDatabase()
-    lat = float(sys.argv[2])
-    lng = float(sys.argv[3])
+    allEntries: Dict = db.listDatabase()
+    lat: float = float(sys.argv[2])
+    lng: float = float(sys.argv[3])
 
-    outputTable = []
-    outputTableHeaders = [
+    outputTable: List = []
+    outputTableHeaders: List = [
         "Lat",
         "Lng",
         "Forecast(UTC)"
     ] + ICON_VARIABLE_INDEXES
 
     for each in allEntries:
-        row = []
+        row: List = []
         with db.getSingleForecast(each) as x:
-            q = x.query(lat, lng)
+            q: Dict[str, datetime.datetime] = x.query(lat, lng)
             row += [q["lat"], q["lng"], q["forecast"]]
             for variableID in ICON_VARIABLE_INDEXES:
                 row.append(q[variableID])
