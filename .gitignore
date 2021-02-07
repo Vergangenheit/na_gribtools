@@ -12,3 +12,4 @@ resources/*.nc
 venv/
 env/
 tmp/
+.idea/
