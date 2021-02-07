@@ -10,5 +10,5 @@ NWP Data Processing Toolkit
 
 The "download" action downloads the grib forecasts and converts them into a .icondb database.
 
-To query the database, use the action "query" with a lat and longitude. 
+To query the database, use the action "query" with a lat and longitude in a EPSG:4326 format. 
 example: `./iconmanage.py query 45.268012 7.768123`
