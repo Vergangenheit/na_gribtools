@@ -8,7 +8,7 @@ from na_gribtools.icon.db import *
 from na_gribtools.icon.grb2toimages import *
 from na_gribtools.icon.variables import *
 
-config = ConfigParser("./config.yaml")
+config: ConfigParser = ConfigParser("./config.yaml")
 
 action: str = sys.argv[1].lower()
 db: ICONDatabase = ICONDatabase(config)

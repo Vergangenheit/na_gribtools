@@ -7,7 +7,7 @@ import datetime
 import math
 import re
 from typing import Union, Dict, List, Match, Optional
-
+from na_gribtools.config import ConfigParser
 from .variables import *
 from .dbcache import *
 from ..filesystem import *
@@ -17,7 +17,7 @@ DATASET_DELAY: datetime.timedelta = datetime.timedelta(hours=3)
 
 class ICONDatabase:
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigParser):
         self.resourceDir = config.resourceDir
         self.tempDir = config.workDir
         self.archiveLife = config.archiveLife
