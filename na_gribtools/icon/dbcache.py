@@ -282,14 +282,14 @@ class ICONDBReader:
             metadata: bytes = f.read(metadataBinLength)
             self.dataOffset: int = metadataBinLength + 2
             self.metadata: Dict = json.loads(metadata.decode("utf-8"))
-            print(f'metadata is of type {type(self.metadata)}')
+
 
         self.__filename = filename
         self.__xSize = self.metadata["xSize"]
         self.__ySize = self.metadata["ySize"]
         self.__timeIdentifier = self.metadata["time"]
         self.__forecastHours = self.metadata["forecast"]
-        self.__transform = self.metadata["transform"]
+        self.__transform: List = self.metadata["transform"]
         self.__runTime = timeIdentifierToDatetime(self.__timeIdentifier)
         self.__forecastTime =\
             self.__runTime + datetime.timedelta(hours=self.__forecastHours)
@@ -305,7 +305,7 @@ class ICONDBReader:
         x: int
         y: int
         x, y = geotransformLatLngToXY(self.__transform, lat, lng)
-        offset = self.dataOffset +\
+        offset: int = self.dataOffset +\
             (y * self.__xSize + x) * ICONDB_ENTRY_BYTES_SIZE
         self.__f.seek(offset, os.SEEK_SET)
         data = struct.unpack(

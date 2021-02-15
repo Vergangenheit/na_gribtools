@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-from typing import Tuple
+from typing import Tuple, List
 
 
-def geotransformLatLngToXY(transform, lat: float, lng: float) -> Tuple[int, int]:
+def geotransformLatLngToXY(transform: List, lat: float, lng: float) -> Tuple[int, int]:
     """Reverse transform from lat/lng coordinates to X-Y.
         lng = TOPLEFTX + (x + 1) * RESX, x starts from 0
         lat = TOPLEFTY + (y + 1) * RESY, y starts from 0
@@ -14,7 +14,7 @@ def geotransformLatLngToXY(transform, lat: float, lng: float) -> Tuple[int, int]
     return x, y
 
 
-def geotransformXYToLatLng(transform, x, y):
+def geotransformXYToLatLng(transform: List, x: int, y: int) -> Tuple[float, float]:
     TOPLEFTX, RESX, _, TOPLEFTY, __, RESY = transform
     lat = TOPLEFTY + (y + 1) * RESY
     lng = TOPLEFTX + (x + 1) * RESX

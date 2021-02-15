@@ -12,6 +12,9 @@ def convertDWDGrid(resourceDir: str, inputFile: str, removeOnSuccess=True):
     resFile = lambda i: os.path.realpath(os.path.join(resourceDir, i))
     targetFile: str = resFile("target_grid_world_0125.txt")
     weightFile: str = resFile("weights_icogl2world_0125.nc")
+    # TODO find right weight files for icon-eu gribs
+    # targetFile: str = resFile("target_grid_EUAU_0125.txt")
+    # weightFile: str = resFile("weights_icogl2world_0125_EUAU.nc")
 
     if not (os.path.isfile(targetFile) and os.path.isfile(weightFile)):
         raise Exception("One or more expected file(s) cannot be accessed:\n" + \

@@ -23,7 +23,7 @@ if action == "download":
         print("Usage: python3 iconmanage.py download <now|zero> hour(s)")
         exit(1)
     for each in sys.argv[3:]:
-        filename = func(int(each))
+        filename: str = func(int(each))
         print(filename)
 
 elif action == "query":

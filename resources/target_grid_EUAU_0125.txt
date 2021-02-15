@@ -1,0 +1,8 @@
+# CDO grid description file for regular grid Europe source ICON_GLOBAL
+gridtype  = lonlat
+xsize     = 1201
+ysize     = 601
+xfirst    = -75.0
+xinc      = 0.125
+yfirst    = 5.0
+yinc      = 0.125

@@ -3,7 +3,8 @@
 import os
 import sys
 import subprocess
-import datetime
+import datetime as dt
+from datetime import datetime, timedelta
 import math
 import re
 from typing import Union, Dict, List, Match, Optional
@@ -12,7 +13,7 @@ from .variables import *
 from .dbcache import *
 from ..filesystem import *
 
-DATASET_DELAY: datetime.timedelta = datetime.timedelta(hours=3)
+DATASET_DELAY: timedelta = dt.timedelta(hours=3)
 
 
 class ICONDatabase:
@@ -25,8 +26,9 @@ class ICONDatabase:
 
     def __getDatasetFilename( \
             self, variableID, timeIdentifier, hours, ending=".grib2.bz2"
-    ):
+    ) -> str:
         # icon_global_icosahedral_single-level_2018111900_000_ALB_RAD.grib2.bz2
+        # icon-eu_europe_regular-lat-lon_single-level_2021021406_000_ALB_RAD.grib2.bz2
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
         return "icon_global_icosahedral_%s_%s_%03d_%s%s" % (
             vLevel.lower(),
@@ -35,6 +37,14 @@ class ICONDatabase:
             vName.upper(),
             ending
         )
+        # TODO remove commented returned string
+        # return "icon-eu_europe_regular-lat-lon_%s_%s_%03d_%s%s" % (
+        #     vLevel.lower(),
+        #     timeIdentifier,
+        #     hours,
+        #     vName.upper(),
+        #     ending
+        # )
         """return "ICON_iko_%s_elements_world_%s_%s_%03d%s" % (\
             vLevel,
             vName.upper(),
@@ -43,7 +53,7 @@ class ICONDatabase:
             ending
         )"""
 
-    def __getURL(self, variableID, timeIdentifier, hours=6):
+    def __getURL(self, variableID: str, timeIdentifier: str, hours: int = 6) -> str:
         """Generate a download URL for a given variable defined in
         `variables.py`, with a given time identifier, and a hour which the
         dataset is calculated for in the future.
@@ -66,16 +76,18 @@ class ICONDatabase:
 
         vName, vLevel, vBand = ICON_VARIABLES[variableID]
         # https://opendata.dwd.de/weather/nwp/icon/grib/00/alb_rad/icon_global_icosahedral_single-level_2018111900_000_ALB_RAD.grib2.bz2
-        URL = "https://opendata.dwd.de/weather/nwp/icon/grib/"
+        URL: str = "https://opendata.dwd.de/weather/nwp/icon/grib/"
+        # TODO remove commented url
+        # URL: str = "https://opendata.dwd.de/weather/nwp/icon-eu/grib/"
         URL += timeIdentifier[-2:] + "/" + vName.lower() + "/"
         URL += self.__getDatasetFilename( \
             variableID, timeIdentifier, hours, ".grib2.bz2")
         return URL
 
     def __getDownloadTimeInfo(self):
-        lastTime = datetime.datetime.utcnow() - DATASET_DELAY
+        lastTime = dt.datetime.utcnow() - DATASET_DELAY
         downloadHour = math.floor(lastTime.hour / 6.0) * 6
-        downloadTime = datetime.datetime(
+        downloadTime = dt.datetime(
             lastTime.year, lastTime.month, lastTime.day, downloadHour
         )
         return "%4d%02d%02d%02d" % ( \
@@ -123,11 +135,11 @@ class ICONDatabase:
 
         timeIdentifier, downloadTime = self.__getDownloadTimeInfo()
 
-        nowTime: datetime.datetime = datetime.datetime.utcnow()
-        roundedNowTime: datetime.datetime = datetime.datetime(
+        nowTime: datetime = dt.datetime.utcnow()
+        roundedNowTime: datetime = dt.datetime(
             nowTime.year, nowTime.month, nowTime.day, nowTime.hour)
-        forecastTime: datetime.datetime = roundedNowTime + \
-                                          datetime.timedelta(hours=forecastHoursFromNow)
+        forecastTime: datetime = roundedNowTime + \
+                                          dt.timedelta(hours=forecastHoursFromNow)
 
         forecastDiff = int((forecastTime - downloadTime).total_seconds() / 3600.0)
         if forecastDiff > 78:
@@ -153,7 +165,7 @@ class ICONDatabase:
                 runTime = timeIdentifierToDatetime(match.group(1))
                 forecastHours = int(match.group(2))
                 forecastTime = \
-                    runTime + datetime.timedelta(hours=forecastHours)
+                    runTime + dt.timedelta(hours=forecastHours)
             except:
                 continue
             # check if this file might be an interested image output based on
@@ -188,7 +200,7 @@ class ICONDatabase:
                 continue
             try:
                 timeIdentifier: str = match.group(1)
-                forecastTime: datetime.datetime = timeIdentifierToDatetime(timeIdentifier)
+                forecastTime: datetime = timeIdentifierToDatetime(timeIdentifier)
             except:
                 continue
 
@@ -202,12 +214,12 @@ class ICONDatabase:
 
     def cleanUp(self):
         """Delete files whose run time is older as `beforeHours`."""
-        now = datetime.datetime.utcnow()
-        archiveLifeDelta = datetime.timedelta(hours=self.archiveLife)
-        oneHourDelta = datetime.timedelta(hours=1)
+        now: datetime = dt.datetime.utcnow()
+        archiveLifeDelta: timedelta = dt.timedelta(hours=self.archiveLife)
+        oneHourDelta: timedelta = dt.timedelta(hours=1)
 
-        deleteArchiveWithRunTimeBefore = now - archiveLifeDelta
-        deleteICONDBWithForecastTimeBefore = now - oneHourDelta
+        deleteArchiveWithRunTimeBefore: datetime = now - archiveLifeDelta
+        deleteICONDBWithForecastTimeBefore: datetime = now - oneHourDelta
 
         isOlderThan = lambda a, b: (b - a).total_seconds() > 0  # a is older than b
 
@@ -223,7 +235,7 @@ class ICONDatabase:
             filename = os.path.split(path)[-1]
             match = re.search("([0-9]{10})_[0-9]{3}", filename)
             try:
-                runTime = timeIdentifierToDatetime(match.group(1))
+                runTime: datetime = timeIdentifierToDatetime(match.group(1))
                 if isOlderThan(runTime, deleteArchiveWithRunTimeBefore):
                     delList.append(path)
             except:
@@ -234,7 +246,7 @@ class ICONDatabase:
 
         # delete old icondb files
 
-        icondbFiles = filterDirWithSuffix(
+        icondbFiles: List = filterDirWithSuffix(
             self.tempDir, [
                 ".icondb",
                 ".icondb.temp",
@@ -247,7 +259,7 @@ class ICONDatabase:
             match = re.search("\\-([0-9]{10})\\.", filename)
             if not match: continue
             try:
-                runTime = timeIdentifierToDatetime(match.group(1))
+                runTime: datetime = timeIdentifierToDatetime(match.group(1))
                 if isOlderThan(runTime, deleteICONDBWithForecastTimeBefore):
                     delList.append(path)
             except:

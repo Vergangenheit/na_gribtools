@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 ##############################################################################
-
+from typing import List
 # Basic configuration of all interested variables
 
 ICON_SINGLE_LEVEL = "single-level"
@@ -9,22 +9,40 @@ ICON_PRESSURE_LEVEL = "pressure_level"
 ICON_LEVEL_1_85 = "model_level_1-85"
 ICON_LEVEL_86_90 = "model_level_86_90"
 
+# ICON_VARIABLES = {
+#     # variables that we are interested in
+#     # see: https://www.dwd.de/DE/leistungen/opendata/help/inhalt_allgemein/opendata_content_de_en_pdf.pdf?__blob=publicationFile
+#
+#     # id             name           level                        band
+#     "t_2m":         ("t_2m",        ICON_SINGLE_LEVEL,           1          ),
+#     "td_2m":        ("td_2m",       ICON_SINGLE_LEVEL,           1          ),
+#     "tot_prec":     ("tot_prec",    ICON_SINGLE_LEVEL,           1          ),
+#     "ww":           ("ww",          ICON_SINGLE_LEVEL,           1          ),
+#     "clct":         ("clct",        ICON_SINGLE_LEVEL,           1          ),
+#     "vmax_10m":     ("vmax_10m",    ICON_SINGLE_LEVEL,           1          ),
+#     "p_surface":    ("ps",          ICON_SINGLE_LEVEL,           1          ),
+#     "qv_surface":   ("qv_s",        ICON_SINGLE_LEVEL,           1          ),
+# }
+# TODO remove commented variables
 ICON_VARIABLES = {
     # variables that we are interested in
     # see: https://www.dwd.de/DE/leistungen/opendata/help/inhalt_allgemein/opendata_content_de_en_pdf.pdf?__blob=publicationFile
 
-    # id             name           level                        band
-    "t_2m":         ("t_2m",        ICON_SINGLE_LEVEL,           1          ),
-    "td_2m":        ("td_2m",       ICON_SINGLE_LEVEL,           1          ),
-    "tot_prec":     ("tot_prec",    ICON_SINGLE_LEVEL,           1          ),
-    "ww":           ("ww",          ICON_SINGLE_LEVEL,           1          ),
-    "clct":         ("clct",        ICON_SINGLE_LEVEL,           1          ),
-    "vmax_10m":     ("vmax_10m",    ICON_SINGLE_LEVEL,           1          ),
-    "p_surface":    ("ps",          ICON_SINGLE_LEVEL,           1          ),
-    "qv_surface":   ("qv_s",        ICON_SINGLE_LEVEL,           1          ),
+    # id             name                 level                        band
+    "t_2m":          ("t_2m",             ICON_SINGLE_LEVEL,           1          ),
+    "aswdifd_s":     ("aswdifd_s",        ICON_SINGLE_LEVEL,           1          ),
+    "aswdifu_s":     ("aswdifu_s",        ICON_SINGLE_LEVEL,           1          ),
+    "aswdir_s":      ("aswdir_s",         ICON_SINGLE_LEVEL,           1          ),
+    "clct":          ("clct",             ICON_SINGLE_LEVEL,           1          ),
+    "ps":            ("ps",               ICON_SINGLE_LEVEL,           1          ),
+    "qv_s":          ("qv_s",             ICON_SINGLE_LEVEL,           1          ),
+    "tot_prec":      ("tot_prec",         ICON_SINGLE_LEVEL,           1          ),
+    "u_10m":         ("u_10m",            ICON_SINGLE_LEVEL,           1          ),
+    "v_10m":         ("v_10m",            ICON_SINGLE_LEVEL,           1          ),
+    "vmax_10m":      ("vmax_10m",         ICON_SINGLE_LEVEL,           1          ),
 }
 
-ICON_VARIABLE_INDEXES = sorted(ICON_VARIABLES.keys())
+ICON_VARIABLE_INDEXES: List[str] = sorted(ICON_VARIABLES.keys())
 
 ##############################################################################
 
